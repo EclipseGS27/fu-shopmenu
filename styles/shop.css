@@ -1,0 +1,120 @@
+@font-face { font-family: 'FUSH Antonio'; src: url('../fonts/antonio-latin-400-normal.woff2') format('woff2'); font-weight: 400; }
+@font-face { font-family: 'FUSH Antonio'; src: url('../fonts/antonio-latin-700-normal.woff2') format('woff2'); font-weight: 700; }
+@font-face { font-family: 'FUSH PT Sans'; src: url('../fonts/pt-sans-latin-400-normal.woff2') format('woff2'); font-weight: 400; }
+@font-face { font-family: 'FUSH PT Sans'; src: url('../fonts/pt-sans-latin-700-normal.woff2') format('woff2'); font-weight: 700; }
+
+.fush-shop, .fush-setup {
+	--bg: #0b1424; --bg2: #13203a; --panel: rgba(19, 32, 58, 0.92); --line: rgba(159, 208, 255, 0.35); --line2: rgba(159, 208, 255, 0.15);
+	--ink: #eef3ff; --ink2: rgba(238, 243, 255, 0.72); --ink3: rgba(238, 243, 255, 0.45);
+	--gold: #f2c45a; --acc: #5aa9ff; --good: #6be3a0; --bad: #ff6b7a;
+	--disp: 'FUSH Antonio', 'Antonio', sans-serif; --text: 'FUSH PT Sans', 'PT Sans', sans-serif;
+}
+.fush-shop .window-content, .fush-setup .window-content { padding: 0; background: radial-gradient(120% 90% at 20% 0%, #1b2c4d 0%, var(--bg) 60%); color: var(--ink); font-family: var(--text); font-size: 15px; }
+.fush-shop .window-header, .fush-setup .window-header { background: var(--bg); color: var(--ink); border-bottom: 1px solid var(--line2); }
+
+.fush-body { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.fush-head { display: flex; gap: 14px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line2); background: linear-gradient(180deg, rgba(90, 169, 255, 0.1), transparent); }
+.fush-head .portrait { width: 64px; height: 64px; object-fit: cover; border: 1px solid var(--gold); border-radius: 4px; transform: rotate(45deg) scale(0.8); }
+.fush-head .who { flex: 1; min-width: 0; }
+.fush-head .kicker { font-family: var(--disp); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); }
+.fush-head .name { font-family: var(--disp); font-size: 28px; line-height: 1.1; letter-spacing: 0.03em; }
+.fush-head .greet { color: var(--ink2); font-style: italic; }
+.fush-head .wallet { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+.fush-head .wallet select { min-width: 160px; }
+.fush-head .money { display: flex; gap: 12px; }
+.fush-head .money span { display: flex; flex-direction: column; align-items: flex-end; padding: 2px 10px; border-left: 2px solid var(--gold); }
+.fush-head .money small { font-size: 11px; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.08em; }
+.fush-head .money b { font-family: var(--disp); font-size: 18px; font-weight: 400; color: var(--gold); }
+.fush-head .money .tp { border-color: var(--good); }
+.fush-head .money .tp b { color: var(--good); }
+.fush-head .toggles { display: flex; gap: 8px; }
+.fush-shop .seg { display: inline-flex; align-items: center; gap: 2px; }
+.fush-shop .seg small { color: var(--ink3); margin-right: 4px; font-size: 11px; text-transform: uppercase; }
+
+.fush-shop button { font-family: var(--text); color: var(--ink); background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line2); border-radius: 3px; line-height: 1.2; padding: 3px 9px; cursor: pointer; width: auto; }
+.fush-shop button:hover:not([disabled]) { border-color: var(--line); background: rgba(90, 169, 255, 0.15); box-shadow: none; }
+.fush-shop button.on { border-color: var(--gold); color: #fff4d6; background: rgba(242, 196, 90, 0.16); }
+.fush-shop button[disabled] { opacity: 0.4; cursor: default; }
+.fush-shop select, .fush-shop input[type=search], .fush-shop input[type=number] { background: rgba(0, 0, 0, 0.35); color: var(--ink); border: 1px solid var(--line2); border-radius: 3px; height: 26px; }
+
+.fush-tabs { display: flex; gap: 4px; align-items: center; padding: 6px 16px; border-bottom: 1px solid var(--line2); }
+.fush-tabs .tab { font-family: var(--disp); font-size: 16px; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 14px; }
+.fush-tabs .tab small { color: var(--gold); }
+.fush-tabs .sp { flex: 1; }
+.fush-tabs .haggle { display: inline-flex; gap: 4px; align-items: center; }
+.fush-tabs .haggle em { font-style: normal; font-family: var(--disp); letter-spacing: 0.05em; color: var(--ink2); }
+.fush-tabs .haggle em.good { color: var(--good); }
+.fush-tabs .haggle em.bad { color: var(--bad); }
+
+.fush-main { flex: 1; min-height: 0; display: flex; gap: 12px; padding: 12px 16px; }
+.fush-main > .empty, .fush-main .empty { color: var(--ink3); padding: 20px; text-align: center; flex: 1; }
+.fush-main .list { flex: 1.2; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.fush-main .list.wide { flex: 1; overflow-y: auto; }
+.fush-main .chips { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.fush-main .chips small { color: var(--ink3); }
+.fush-main .chips input[type=search] { margin-left: auto; width: 160px; }
+.fush-main .rows { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; padding-right: 4px; }
+.fush-main .row { display: flex; align-items: center; gap: 10px; padding: 4px 8px; text-align: left; border: 1px solid transparent; background: transparent; font-size: 15px; }
+.fush-main button.row:hover, .fush-main button.row.on { background: linear-gradient(90deg, rgba(90, 169, 255, 0.32), rgba(90, 169, 255, 0.04)); border-color: transparent; }
+.fush-main button.row.on { box-shadow: inset 3px 0 0 var(--gold); }
+.fush-main .row.static { border-bottom: 1px solid var(--line2); border-radius: 0; }
+.fush-main .row img { width: 30px; height: 30px; object-fit: contain; border: 0; flex: none; }
+.fush-main .row .l { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fush-main .row .p { font-family: var(--disp); font-size: 15px; color: var(--gold); white-space: nowrap; }
+.fush-main .row .p s { color: var(--ink3); margin-right: 6px; font-size: 13px; }
+.fush-main .row.poor .p { color: var(--bad); }
+.fush-main .row.poor .l { color: var(--ink3); }
+.fush-main .tag { color: var(--ink3); font-size: 12px; margin-left: 6px; }
+.fush-main .vd { font-style: normal; font-family: var(--disp); font-size: 13px; width: 26px; text-align: center; }
+.fush-main .vd.up { color: var(--good); }
+.fush-main .vd.down { color: var(--bad); }
+.fush-main .vd.eq { color: var(--ink3); }
+.fush-main .vd.new { color: var(--acc); font-size: 11px; }
+
+.fush-main .detail { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); overflow-y: auto; }
+.fush-main .detail.empty { justify-content: center; text-align: center; color: var(--ink3); }
+.fush-main .detail .top { display: flex; gap: 12px; align-items: center; }
+.fush-main .detail .top img { width: 56px; height: 56px; object-fit: contain; border: 1px solid var(--line2); border-radius: 4px; background: rgba(0, 0, 0, 0.25); }
+.fush-main .detail .nm { font-family: var(--disp); font-size: 22px; letter-spacing: 0.03em; }
+.fush-main .detail .ln { color: var(--ink2); }
+.fush-main .detail .q { color: var(--gold); margin-top: 2px; }
+.fush-main .detail .desc { color: var(--ink2); font-size: 14px; line-height: 1.45; }
+.fush-main .detail .desc p { margin: 0 0 6px; }
+.fush-main .cmp { border-top: 1px solid var(--line2); border-bottom: 1px solid var(--line2); padding: 6px 0; }
+.fush-main .cmp .cap { color: var(--ink3); font-size: 13px; margin-bottom: 4px; }
+.fush-main .cmp table { width: 100%; border-collapse: collapse; margin: 0; background: none; border: 0; }
+.fush-main .cmp tr { background: none !important; }
+.fush-main .cmp th { text-align: left; font-family: var(--disp); font-weight: 400; letter-spacing: 0.06em; color: var(--ink2); padding: 1px 0; }
+.fush-main .cmp td { text-align: center; font-family: var(--disp); padding: 1px 0; }
+.fush-main .cmp td.arrow { color: var(--ink3); }
+.fush-main .cmp td.d.up { color: var(--good); }
+.fush-main .cmp td.d.down { color: var(--bad); }
+.fush-main .note { color: var(--ink3); font-size: 13px; margin: 4px 0; }
+.fush-main .warn { color: var(--bad); font-size: 13px; margin: 4px 0; }
+.fush-main .acts { margin-top: auto; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.fush-main .acts .why { width: 100%; color: var(--ink3); font-size: 13px; }
+.fush-main .acts .qty input { width: 48px; }
+.fush-shop .cta { font-family: var(--disp); font-size: 16px; letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 16px; border-color: var(--gold); color: #fff4d6; background: linear-gradient(90deg, rgba(242, 196, 90, 0.35), rgba(242, 196, 90, 0.1)); }
+.fush-shop .cta.alt { border-color: var(--good); color: #d9ffe9; background: linear-gradient(90deg, rgba(107, 227, 160, 0.3), rgba(107, 227, 160, 0.06)); }
+.fush-shop .cta.sm { font-size: 13px; padding: 3px 10px; }
+.fush-main .services { gap: 16px; }
+.fush-main .svc h3 { font-family: var(--disp); font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); border-bottom: 1px solid var(--line2); margin: 0 0 4px; }
+.fush-main .svc .rows { overflow: visible; }
+.fush-main .svc > .cta { margin-top: 8px; }
+
+/* setup */
+.fush-setup-body { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+.fush-setup fieldset { border: 1px solid var(--line2); border-radius: 4px; padding: 6px 10px 10px; display: flex; flex-direction: column; gap: 6px; }
+.fush-setup legend { font-family: var(--disp); letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); padding: 0 6px; }
+.fush-setup label { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.fush-setup label.chk { justify-content: flex-start; }
+.fush-setup input[type=number] { width: 80px; }
+.fush-setup input[type=text] { flex: 1; }
+.fush-setup .inl { display: inline-flex; gap: 6px; }
+.fush-setup .note { color: var(--ink3); font-size: 13px; margin: 0; }
+.fush-setup .foot { display: flex; gap: 6px; align-items: center; }
+.fush-setup .foot .sp { flex: 1; }
+.fush-setup button.gold { border-color: var(--gold); color: #fff4d6; }
+.fush-setup select, .fush-setup input { color: var(--ink); background: rgba(0, 0, 0, 0.35); border: 1px solid var(--line2); }
+
+.fush-chat p { margin: 0; }
