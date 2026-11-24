@@ -102,19 +102,30 @@ const OPS = {
 		const item = merchant.items.get(p.item);
 		if (!item) return fail('That item is no longer for sale.');
 		const qty = Math.max(1, Math.min(9, num(p.qty, 1)));
-		if (config(merchant).limited && qty > 1) return fail('There is only one of those.');
+		// stackable items (treasures) keep a quantity: the price is per unit
+		const stackable = item.system?.quantity?.value !== undefined;
+		const inStock = stackable ? Math.max(1, num(item.system.quantity.value, 1)) : 1;
+		if (config(merchant).limited && qty > inStock) return fail(inStock === 1 ? 'There is only one of those.' : `There are only ${inStock} of those.`);
 		const { price } = buyPrice(merchant, item, buyer);
 		const total = price * qty;
 		const payer = await payerFor(p, buyer);
 		const to = await receiverFor(p, buyer);
 		await pay(payer, merchant, total);
-		const data = Array.from({ length: qty }, () => {
+		const fresh = () => {
 			const d = cloneData(item);
 			if (d.flags?.[MODULE_ID]) delete d.flags[MODULE_ID];
 			return d;
-		});
+		};
+		let data;
+		if (stackable) {
+			data = [fresh()];
+			data[0].system.quantity.value = qty;
+		} else data = Array.from({ length: qty }, fresh);
 		await to.createEmbeddedDocuments('Item', data);
-		if (config(merchant).limited) await item.delete();
+		if (config(merchant).limited) {
+			if (stackable && inStock > qty) await item.update({ 'system.quantity.value': inStock - qty });
+			else await item.delete();
+		}
 		await postChat(`<p><b>${esc(buyer.name)}</b> buys <b>${esc(item.name)}</b>${qty > 1 ? ` ×${qty}` : ''} from ${esc(merchant.name)} for <b>${money(total)}</b>${payer !== buyer ? ` (party funds)` : ''}${to !== buyer ? `, sent to the party stash` : ''}.</p>`, speaker(buyer));
 		return { ok: true, message: `Bought ${item.name}${qty > 1 ? ` ×${qty}` : ''} for ${money(total)}.`, cue: 'buy' };
 	},
@@ -128,7 +139,11 @@ const OPS = {
 		const price = sellPrice(merchant, item);
 		if (config(merchant).trackZenit && zenitOf(merchant) < price) return fail(`${merchant.name} can't afford it (${money(zenitOf(merchant))} on hand).`);
 		const data = cloneData(item);
-		await item.delete();
+		// a stack sells one at a time
+		const have = num(item.system?.quantity?.value, 1);
+		if (item.system?.quantity?.value !== undefined) data.system.quantity.value = 1;
+		if (have > 1) await item.update({ 'system.quantity.value': have - 1 });
+		else await item.delete();
 		await addZenit(seller, price);
 		if (config(merchant).trackZenit) await addZenit(merchant, -price);
 		const list = buyback(merchant).slice(-19);
@@ -172,7 +187,7 @@ const OPS = {
 		const actors = [];
 		for (const u of p.actors ?? []) {
 			const a = await fromUuid(u);
-			if (a) actors.push(a);
+			if (a?.type === 'character' && !actors.includes(a)) actors.push(a);
 		}
 		if (!actors.length) return fail('Nobody chosen to stay.');
 		const payerChar = await actorFor(p.payerActor ?? p.actors[0], user);

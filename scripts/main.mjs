@@ -48,7 +48,7 @@ Hooks.once('ready', () => {
 /* Keep open shop windows current */
 for (const h of ['updateActor', 'createItem', 'updateItem', 'deleteItem']) Hooks.on(h, (doc) => rerenderShops(doc));
 Hooks.on('updateSetting', (s) => {
-	if (s.key === 'projectfu.activeParty') for (const a of game.actors.filter(isMerchant)) rerenderShops(a);
+	if (s.key === 'projectfu.optionActiveParty') for (const a of game.actors.filter(isMerchant)) rerenderShops(a);
 });
 
 /* "Shops" button in the token controls, for everyone */

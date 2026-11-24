@@ -33,8 +33,9 @@ export const zenitOf = (actor) => num(actor?.system?.resources?.zenit?.value);
 /** The world's active Party actor (Project FU setting), if any */
 export function activeParty() {
 	try {
-		const id = game.settings.get(SYSTEM, 'activeParty');
-		const p = id ? game.actors.get(id) : null;
+		// Project FU stores the active party under 'optionActiveParty' (an actor id)
+		const v = game.settings.get(SYSTEM, 'optionActiveParty');
+		const p = v instanceof Actor ? v : v ? game.actors.get(v) : null;
 		if (p) return p;
 	} catch {
 		/* older system */
@@ -75,7 +76,8 @@ export function classLevel(actor, fuid) {
 export function windsOfTrade(actor) {
 	const s = (actor?.items?.contents ?? []).find((i) => i.type === 'skill' && i.system?.fuid === 'winds-of-trade');
 	if (!s) return null;
-	return { item: s, current: num(s.system?.rp?.current), max: num(s.system?.rp?.max), sl: num(s.system?.level?.value, 1) };
+	const sl = num(s.system?.level?.value, 1);
+	return { item: s, current: num(s.system?.rp?.current), max: num(s.system?.rp?.max) || sl + 3, sl };
 }
 
 export function postChat(html, speaker) {
