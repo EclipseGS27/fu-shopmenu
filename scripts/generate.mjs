@@ -78,7 +78,9 @@ export async function restock(merchant, opts = {}) {
 	const docs = await buildStock(merchant, opts);
 	const old = merchant.items.filter((i) => i.getFlag(MODULE_ID, 'generated')).map((i) => i.id);
 	if (old.length) await merchant.deleteEmbeddedDocuments('Item', old);
-	const data = docs.map((d) => {
+	// what the GM stocked by hand is not offered a second time
+	const handStocked = new Set(merchant.items.filter((i) => !i.getFlag(MODULE_ID, 'generated')).map((i) => `${i.type}|${i.name}`));
+	const data = docs.filter((d) => !handStocked.has(`${d.type}|${d.name}`)).map((d) => {
 		const o = game.items.fromCompendium ? game.items.fromCompendium(d) : d.toObject();
 		o.flags ??= {};
 		o.flags[MODULE_ID] = { generated: true };

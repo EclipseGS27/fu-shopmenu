@@ -96,6 +96,18 @@ async function pay(payer, merchant, price) {
 
 const speaker = (actor) => ChatMessage.getSpeaker({ actor });
 
+/** Give items to an actor; stackable ones (treasures) join a matching stack instead of making a new entry */
+async function giveItems(actor, list) {
+	const fresh = [];
+	for (const d of list) {
+		const q = d.system?.quantity?.value;
+		const same = q !== undefined ? actor.items.find((i) => i.type === d.type && i.name === d.name && i.system?.quantity?.value !== undefined && costOf(i) === costOf({ system: d.system })) : null;
+		if (same) await same.update({ 'system.quantity.value': num(same.system.quantity.value) + num(q, 1) });
+		else fresh.push(d);
+	}
+	if (fresh.length) await actor.createEmbeddedDocuments('Item', fresh);
+}
+
 const OPS = {
 	async buy(merchant, p, user) {
 		const buyer = await actorFor(p.buyer, user);
@@ -121,7 +133,7 @@ const OPS = {
 			data = [fresh()];
 			data[0].system.quantity.value = qty;
 		} else data = Array.from({ length: qty }, fresh);
-		await to.createEmbeddedDocuments('Item', data);
+		await giveItems(to, data);
 		if (config(merchant).limited) {
 			if (stackable && inStock > qty) await item.update({ 'system.quantity.value': inStock - qty });
 			else await item.delete();
@@ -162,7 +174,7 @@ const OPS = {
 		const payer = await payerFor(p, buyer);
 		const to = await receiverFor(p, buyer);
 		await pay(payer, merchant, entry.price);
-		await to.createEmbeddedDocuments('Item', [entry.data]);
+		await giveItems(to, [entry.data]);
 		list.splice(i, 1);
 		await merchant.setFlag(MODULE_ID, 'buyback', list);
 		await postChat(`<p><b>${esc(buyer.name)}</b> buys back <b>${esc(entry.data.name)}</b> for <b>${money(entry.price)}</b>.</p>`, speaker(buyer));

@@ -48,8 +48,10 @@ export function statsOf(item) {
 			const def = num(s.def?.value);
 			const mdef = num(s.mdef?.value);
 			const init = num(s.init?.value);
-			const defA = s.def?.attribute ? `${ATTR[s.def.attribute] ?? s.def.attribute} die${def ? ` + ${def}` : ''}` : `+${def}`;
-			const mdefA = s.mdef?.attribute ? `${ATTR[s.mdef.attribute] ?? s.mdef.attribute} die${mdef ? ` + ${mdef}` : ''}` : `+${mdef}`;
+			// armor sets DEF / M.DEF (an attribute die plus a bonus, or a flat score); shields and accessories add to it
+			const flat = (n) => (item.type === 'armor' ? `${n}` : `+${n}`);
+			const defA = s.def?.attribute ? `${ATTR[s.def.attribute] ?? s.def.attribute} die${def ? ` + ${def}` : ''}` : flat(def);
+			const mdefA = s.mdef?.attribute ? `${ATTR[s.mdef.attribute] ?? s.mdef.attribute} die${mdef ? ` + ${mdef}` : ''}` : flat(mdef);
 			const parts = [];
 			if (item.type !== 'accessory' || def) parts.push(`DEF ${defA}`);
 			if (item.type !== 'accessory' || mdef) parts.push(`M.DEF ${mdefA}`);
@@ -96,7 +98,8 @@ export function equippedFor(actor, item) {
 export function compare(actor, item) {
 	const cur = equippedFor(actor, item);
 	const a = statsOf(item).nums;
-	const b = cur ? statsOf(cur).nums : {};
+	// no armor on: DEF is the DEX die and M.DEF the INS die
+	const b = cur ? statsOf(cur).nums : item.type === 'armor' ? { def: 0, mdef: 0, init: 0, defAttr: 'dex', mdefAttr: 'ins' } : {};
 	const keys = item.type === 'weapon' || item.type === 'customWeapon' ? ['accuracy', 'damage', 'def', 'mdef', 'init'] : ['def', 'mdef', 'init'];
 	const label = { accuracy: 'Accuracy', damage: 'Damage', def: 'DEF', mdef: 'M.DEF', init: 'INIT' };
 	const rows = [];
@@ -107,7 +110,7 @@ export function compare(actor, item) {
 		rows.push({ key: k, label: label[k], now, then, diff: then - now });
 	}
 	// armor with a DEX die vs a flat bonus: say so rather than pretend the numbers compare
-	const note = a.defAttr !== undefined && (a.defAttr ?? null) !== (b.defAttr ?? null) && cur ? `DEF uses ${a.defAttr ? `the ${a.defAttr.toUpperCase()} die` : 'a flat score'} instead of ${b.defAttr ? `the ${b.defAttr.toUpperCase()} die` : 'a flat score'}.` : '';
+	const note = a.defAttr !== undefined && (a.defAttr ?? null) !== (b.defAttr ?? null) && (cur || item.type === 'armor') ? `DEF uses ${a.defAttr ? `the ${a.defAttr.toUpperCase()} die` : 'a flat score'} instead of ${b.defAttr ? `the ${b.defAttr.toUpperCase()} die` : 'a flat score'}.` : '';
 	return { current: cur, rows, note };
 }
 

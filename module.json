@@ -2,7 +2,7 @@
   "id": "fu-shopmenu",
   "title": "Fabula Ultima Shop & Economy",
   "description": "A JRPG-style shop for Project FU: buy, sell and buy back with automatic zenit, compare gear with what you have equipped, Inventory Point restocks, inns, haggling, Merchant class Trade Points, party funds and party stash, and level-appropriate stock generated from Project FU's compendiums.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "authors": [
     {
       "name": "George Sowidan"
@@ -39,6 +39,6 @@
   "socket": true,
   "url": "https://github.com/EclipseGS27/fu-shopmenu",
   "manifest": "https://raw.githubusercontent.com/EclipseGS27/fu-shopmenu/main/module.json",
-  "download": "https://github.com/EclipseGS27/fu-shopmenu/releases/download/v0.1.1/fu-shopmenu.zip",
+  "download": "https://github.com/EclipseGS27/fu-shopmenu/releases/download/v0.1.2/fu-shopmenu.zip",
   "bugs": "https://github.com/EclipseGS27/fu-shopmenu/issues"
 }

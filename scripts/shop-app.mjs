@@ -25,8 +25,9 @@ export function openShop(merchant) {
 		app = new ShopApp(merchant);
 		open.set(merchant.uuid, app);
 	}
+	// an open window comes to the front; a new one renders on top anyway
+	if (app.rendered) app.bringToFront?.();
 	app.render({ force: true });
-	app.bringToFront?.();
 	return app;
 }
 
@@ -44,7 +45,7 @@ export class ShopApp extends ApplicationV2 {
 	constructor(merchant, options = {}) {
 		super(options);
 		this.merchant = merchant;
-		this.state = { tab: 'buy', cat: 'all', sel: null, buyer: null, payer: 'self', deliver: 'self', qty: 1, pair: 'insWlp', search: '', seller: null, inn: null };
+		this.view = { tab: 'buy', cat: 'all', sel: null, buyer: null, payer: 'self', deliver: 'self', qty: 1, pair: 'insWlp', search: '', seller: null, inn: null };
 		this._timer = null;
 	}
 
@@ -66,7 +67,7 @@ export class ShopApp extends ApplicationV2 {
 
 	get buyer() {
 		const list = shoppers();
-		const want = list.find((a) => a.id === this.state.buyer);
+		const want = list.find((a) => a.id === this.view.buyer);
 		const def = list.find((a) => a.id === game.user.character?.id) ?? list[0] ?? null;
 		return want ?? def;
 	}
@@ -84,7 +85,7 @@ export class ShopApp extends ApplicationV2 {
 		const m = this.merchant;
 		const cfg = config(m);
 		const buyer = this.buyer;
-		const st = this.state;
+		const st = this.view;
 		const party = activeParty();
 		const tabs = TABS.filter(([id]) => id !== 'services' || cfg.innPrice || cfg.ipRefill).map(([id, label]) => `<button type="button" class="tab ${st.tab === id ? 'on' : ''}" data-act="tab" data-id="${id}">${label}${id === 'buyback' && buyback(m).length ? ` <small>${buyback(m).length}</small>` : ''}</button>`);
 		const buyerOpts = shoppers()
@@ -136,12 +137,12 @@ export class ShopApp extends ApplicationV2 {
 		const counts = {};
 		for (const i of items) counts[categoryOf(i)] = (counts[categoryOf(i)] ?? 0) + 1;
 		const chips = [['all', 'All'], ...CATEGORIES.filter(([id]) => counts[id]).map(([id, label]) => [id, label])];
-		return `<div class="chips">${chips.map(([id, label]) => `<button type="button" data-act="cat" data-id="${id}" class="${this.state.cat === id ? 'on' : ''}">${label}${id !== 'all' ? ` <small>${counts[id]}</small>` : ''}</button>`).join('')}<input type="search" data-act="search" placeholder="Search" value="${esc(this.state.search)}"></div>`;
+		return `<div class="chips">${chips.map(([id, label]) => `<button type="button" data-act="cat" data-id="${id}" class="${this.view.cat === id ? 'on' : ''}">${label}${id !== 'all' ? ` <small>${counts[id]}</small>` : ''}</button>`).join('')}<input type="search" data-act="search" placeholder="Search" value="${esc(this.view.search)}"></div>`;
 	}
 
 	#filter(items) {
-		const q = this.state.search.trim().toLowerCase();
-		return items.filter((i) => (this.state.cat === 'all' || categoryOf(i) === this.state.cat) && (!q || i.name.toLowerCase().includes(q)));
+		const q = this.view.search.trim().toLowerCase();
+		return items.filter((i) => (this.view.cat === 'all' || categoryOf(i) === this.view.cat) && (!q || i.name.toLowerCase().includes(q)));
 	}
 
 	/** Better / worse / same than what the buyer has on, for the list */
@@ -156,13 +157,13 @@ export class ShopApp extends ApplicationV2 {
 	}
 
 	async #detail(buyer, item, actions) {
-		if (!item) return `<aside class="detail empty">Pick an item to see it here${this.state.tab === 'buy' ? ', compared with what you have equipped' : ''}.</aside>`;
+		if (!item) return `<aside class="detail empty">Pick an item to see it here${this.view.tab === 'buy' ? ', compared with what you have equipped' : ''}.</aside>`;
 		const s = statsOf(item);
 		const q = quality(item);
 		const TE = foundry.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor;
 		const desc = item.system?.description ? await TE.enrichHTML(item.system.description, { relativeTo: item }) : '';
 		let cmp = '';
-		if (['weapon', 'customWeapon', 'armor', 'shield', 'accessory'].includes(item.type) && this.state.tab !== 'sell') {
+		if (['weapon', 'customWeapon', 'armor', 'shield', 'accessory'].includes(item.type) && this.view.tab !== 'sell') {
 			const c = compare(buyer, item);
 			const rows = c.rows.map((r) => `<tr><th>${r.label}</th><td>${r.now}</td><td class="arrow">→</td><td>${r.then}</td><td class="d ${r.diff > 0 ? 'up' : r.diff < 0 ? 'down' : ''}">${r.diff > 0 ? `+${r.diff}` : r.diff || '—'}</td></tr>`).join('');
 			cmp = `<div class="cmp"><div class="cap">Compared with ${c.current ? `<b>${esc(c.current.name)}</b> (equipped)` : 'nothing equipped'}</div><table>${rows}</table>${c.note ? `<p class="note">${esc(c.note)}</p>` : ''}${!canUseMartial(buyer, item) ? `<p class="warn">Martial: ${esc(buyer.name)} has no class that grants this kind of gear.</p>` : ''}</div>`;
@@ -181,23 +182,23 @@ export class ShopApp extends ApplicationV2 {
 		const all = stock(m);
 		if (!all.length) return `<div class="empty">${esc(m.name)} has nothing for sale right now.${game.user.isGM ? ' Open the setup (gear) to restock.' : ''}</div>`;
 		const items = this.#filter(all);
-		const payerZ = this.state.payer === 'party' ? zenitOf(activeParty()) : zenitOf(buyer);
+		const payerZ = this.view.payer === 'party' ? zenitOf(activeParty()) : zenitOf(buyer);
 		const rows = items
 			.map((i) => {
 				const p = buyPrice(m, i, buyer);
 				const poor = p.price > payerZ;
-				return `<button type="button" class="row ${this.state.sel === i.id ? 'on' : ''} ${poor ? 'poor' : ''}" data-act="sel" data-id="${i.id}"><img src="${esc(i.img)}" alt=""><span class="l">${esc(i.name)}</span>${this.#verdict(buyer, i)}<span class="p">${p.pct ? `<s>${money(p.list * p.rate)}</s>` : ''}${money(p.price)}</span></button>`;
+				return `<button type="button" class="row ${this.view.sel === i.id ? 'on' : ''} ${poor ? 'poor' : ''}" data-act="sel" data-id="${i.id}"><img src="${esc(i.img)}" alt=""><span class="l">${esc(i.name)}</span>${this.#verdict(buyer, i)}<span class="p">${p.pct ? `<s>${money(p.list * p.rate)}</s>` : ''}${money(p.price)}</span></button>`;
 			})
 			.join('');
-		const item = all.find((i) => i.id === this.state.sel);
+		const item = all.find((i) => i.id === this.view.sel);
 		let actions = '';
 		if (item) {
 			const p = buyPrice(m, item, buyer);
 			const wot = windsOfTrade(buyer);
 			const canTrade = wot && wot.current >= 2 && costOf(item) <= level(buyer) * 30 && categoryOf(item) !== 'consumable';
 			actions = `${p.parts.length ? `<div class="why">${money(p.list * p.rate)} · ${esc(p.parts.join(' · '))}</div>` : ''}
-				${cfg.limited ? '' : `<label class="qty">Qty <input type="number" min="1" max="9" value="${this.state.qty}" data-act="qty"></label>`}
-				<button type="button" class="cta" data-act="buy" data-id="${item.id}">Buy for ${money(p.price * (cfg.limited ? 1 : this.state.qty))}</button>
+				${cfg.limited ? '' : `<label class="qty">Qty <input type="number" min="1" max="9" value="${this.view.qty}" data-act="qty"></label>`}
+				<button type="button" class="cta" data-act="buy" data-id="${item.id}">Buy for ${money(p.price * (cfg.limited ? 1 : this.view.qty))}</button>
 				${wot ? `<button type="button" class="cta alt" data-act="trade" data-id="${item.id}" ${canTrade ? '' : 'disabled'} data-tooltip="Winds of Trade: 2 Trade Points for a rare item worth up to ${money(level(buyer) * 30)}">2 Trade Points</button>` : ''}`;
 		}
 		return `<div class="list">${this.#catChips(all)}<div class="rows">${rows || '<div class="empty">Nothing matches.</div>'}</div></div>${await this.#detail(buyer, item, actions)}`;
@@ -221,10 +222,10 @@ export class ShopApp extends ApplicationV2 {
 			.map((i) => {
 				const eq = isEquipped(i);
 				const stash = i.parent?.type === 'party';
-				return `<button type="button" class="row ${this.state.sel === i.id ? 'on' : ''} ${eq ? 'poor' : ''}" data-act="sel" data-id="${i.id}"><img src="${esc(i.img)}" alt=""><span class="l">${esc(i.name)}${stash ? ' <small class="tag">stash</small>' : ''}${eq ? ' <small class="tag">equipped</small>' : ''}</span><span class="p">${money(sellPrice(m, i))}</span></button>`;
+				return `<button type="button" class="row ${this.view.sel === i.id ? 'on' : ''} ${eq ? 'poor' : ''}" data-act="sel" data-id="${i.id}"><img src="${esc(i.img)}" alt=""><span class="l">${esc(i.name)}${stash ? ' <small class="tag">stash</small>' : ''}${eq ? ' <small class="tag">equipped</small>' : ''}</span><span class="p">${money(sellPrice(m, i))}</span></button>`;
 			})
 			.join('');
-		const item = all.find((i) => i.id === this.state.sel);
+		const item = all.find((i) => i.id === this.view.sel);
 		let actions = '';
 		if (item) {
 			actions = isEquipped(item) ? `<div class="why">Unequip it first to sell it.</div>` : `<div class="why">${config(m).sellRate}% of ${money(costOf(item))}. You can buy it back for the same price before the shop restocks.</div><button type="button" class="cta" data-act="sell" data-id="${item.id}" data-owner="${item.parent.uuid}">Sell for ${money(sellPrice(m, item))}</button>`;
@@ -259,7 +260,7 @@ export class ShopApp extends ApplicationV2 {
 			html += `<div class="svc"><h3>Restock supplies</h3><p class="note">Refill Inventory Points at ${money(num(m.system?.rates?.recharge, 10))} per point.</p><div class="rows">${rows}</div></div>`;
 		}
 		if (cfg.innPrice) {
-			const picked = this.state.inn ?? party.map((a) => a.uuid);
+			const picked = this.view.inn ?? party.map((a) => a.uuid);
 			const rows = party.map((a) => `<label class="row static"><input type="checkbox" data-act="innPick" value="${a.uuid}" ${picked.includes(a.uuid) ? 'checked' : ''}><img src="${esc(a.img)}" alt=""><span class="l">${esc(a.name)} <small class="tag">HP ${num(a.system?.resources?.hp?.value)}/${num(a.system?.resources?.hp?.max)} · MP ${num(a.system?.resources?.mp?.value)}/${num(a.system?.resources?.mp?.max)}</small></span></label>`).join('');
 			html += `<div class="svc"><h3>Stay the night</h3><p class="note">${money(cfg.innPrice)} per person. Everyone staying recovers all Hit Points and Mind Points (a rest, without Inventory Points).</p><div class="rows">${rows}</div><button type="button" class="cta" data-act="inn" ${picked.length ? '' : 'disabled'}>Rest for ${money(cfg.innPrice * picked.length)}</button></div>`;
 		}
@@ -285,7 +286,7 @@ export class ShopApp extends ApplicationV2 {
 	}
 
 	#onChange(act, el) {
-		const st = this.state;
+		const st = this.view;
 		switch (act) {
 			case 'buyer':
 				st.buyer = el.value;
@@ -326,7 +327,7 @@ export class ShopApp extends ApplicationV2 {
 	}
 
 	async #onClick(act, el) {
-		const st = this.state;
+		const st = this.view;
 		const buyer = this.buyer;
 		const base = { buyer: buyer?.uuid, payer: st.payer, deliver: st.deliver };
 		switch (act) {
